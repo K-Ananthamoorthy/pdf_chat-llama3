@@ -53,6 +53,7 @@ def get_text_chunks(text):
 @timeit
 def get_vectorstore(text_chunks):
     embeddings = OllamaEmbeddings(
+        model="mxbai-embed-large:latest"
         # num_gpu=2
     )
     # embeddings = HuggingFaceInstructEmbeddings(model_name="hkunlp/instructor-xl")
@@ -64,7 +65,7 @@ def get_vectorstore(text_chunks):
 @timeit
 def get_conversation_chain(vectorstore):
     llm = ChatOllama(
-        model="llama2:70b-chat",
+        model="llama3:latest",
         callback_manager=CallbackManager([StreamingStdOutCallbackHandler()]),
         # num_gpu=2
     )
