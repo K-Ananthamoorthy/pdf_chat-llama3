@@ -84,22 +84,36 @@ def handle_userinput(user_question):
                 bot_template.replace("{{MSG}}", message.content), unsafe_allow_html=True
             )
 
-# Student Assistance Function
-def assist_student(query, model):
-    response = model.chat({"role": "user", "content": query})
-    return response['content']
+# Simple Student Assistance Chatbot Function
+def assist_student(query):
+    responses = {
+        "hello": "Hello! How can I assist you today?",
+        "hi": "Hi there! How can I help you?",
+        "greetings": "Greetings! What can I do for you?",
+        "help": "Sure, I'm here to help! What do you need assistance with?",
+        "course": "I can help you with course recommendations or any queries about your studies. What do you need?",
+    }
+    default_response = "I'm here to assist you with any questions you have. How can I help?"
+    for keyword, response in responses.items():
+        if keyword in query.lower():
+            return response
+    return default_response
 
-# Course Recommendation Function
-def generate_recommendations(profile, model):
-    # Simulating recommendations with dummy data
-    # You can implement actual logic to fetch courses based on the profile
-    response = model.chat({"role": "system", "content": f"Recommend courses for a student with the following profile: {profile}"})
-    return response['content'].split('\n')
+# Function to generate course recommendations with images
+def generate_recommendations(profile):
+    courses = [
+        {"name": "Introduction to Machine Learning", "image": "https://via.placeholder.com/150/FF6347/FFFFFF?text=Machine+Learning"},
+        {"name": "Data Science Fundamentals", "image": "https://via.placeholder.com/150/4682B4/FFFFFF?text=Data+Science"},
+        {"name": "Web Development Bootcamp", "image": "https://via.placeholder.com/150/32CD32/FFFFFF?text=Web+Development"},
+        {"name": "Advanced Python Programming", "image": "https://via.placeholder.com/150/FFD700/FFFFFF?text=Python+Programming"},
+        {"name": "Digital Marketing Essentials", "image": "https://via.placeholder.com/150/FF4500/FFFFFF?text=Marketing+Essentials"}
+    ]
+    return courses
 
 # Main function
 def main():
     load_dotenv()
-    st.set_page_config(page_title="Chat with multiple PDFs", page_icon=":books:")
+    st.set_page_config(page_title="Multi-functional App", page_icon=":books:", layout="wide")
     st.write(css, unsafe_allow_html=True)
 
     # Initialize session state variables
@@ -107,47 +121,36 @@ def main():
         st.session_state.conversation = None
     if "chat_history" not in st.session_state:
         st.session_state.chat_history = None
-    if "model" not in st.session_state:
-        st.session_state.model = ChatOllama(
-            model="llama3:latest",
-            callback_manager=CallbackManager([StreamingStdOutCallbackHandler()]),
-        )
 
     # Sidebar for navigation
     st.sidebar.title("Navigation")
-    app_mode = st.sidebar.selectbox("Choose the mode", ["PDF Chat", "Student Assistance", "Course Recommendations"])
+    app_mode = st.sidebar.radio("Choose the mode", ["Home", "PDF Chat", "Student Assistance", "Course Recommendations"])
 
-    if app_mode == "PDF Chat":
+    if app_mode == "Home":
+        st.header("Home Page")
+        st.write("Welcome to the multi-functional application. Use the navigation on the left to switch between modes.")
+
+    elif app_mode == "PDF Chat":
         st.header("Chat with multiple PDFs :books:")
         user_question = st.text_input("Ask a question about your documents:")
         if user_question:
             handle_userinput(user_question)
 
-        with st.sidebar:
-            st.subheader("Your documents")
-            pdf_docs = st.file_uploader(
-                "Upload your PDFs here and click on 'Process'", accept_multiple_files=True
-            )
-            if st.button("Process"):
-                with st.spinner("Processing"):
-                    # Get text from PDFs
-                    raw_text = get_pdf_text(pdf_docs)
-
-                    # Split text into chunks
-                    text_chunks = get_text_chunks(raw_text)
-
-                    # Create vector store
-                    vectorstore = get_vectorstore(text_chunks)
-
-                    # Create conversation chain
-                    st.session_state.conversation = get_conversation_chain(vectorstore)
+        st.sidebar.subheader("Your documents")
+        pdf_docs = st.sidebar.file_uploader("Upload your PDFs here and click on 'Process'", accept_multiple_files=True)
+        if st.sidebar.button("Process"):
+            with st.spinner("Processing"):
+                raw_text = get_pdf_text(pdf_docs)
+                text_chunks = get_text_chunks(raw_text)
+                vectorstore = get_vectorstore(text_chunks)
+                st.session_state.conversation = get_conversation_chain(vectorstore)
 
     elif app_mode == "Student Assistance":
         st.header("Student Assistance")
         assist_query = st.text_area("Ask for assistance regarding your studies, college plans, etc.")
         if st.button("Submit Assistance Query"):
             with st.spinner("Generating response..."):
-                assist_response = assist_student(assist_query, st.session_state.model)
+                assist_response = assist_student(assist_query)
                 st.write(assist_response)
 
     elif app_mode == "Course Recommendations":
@@ -155,8 +158,11 @@ def main():
         profile_input = st.text_input("Enter your profile details")
         if st.button("Submit Profile for Recommendations"):
             with st.spinner("Generating recommendations..."):
-                recommendations = generate_recommendations(profile_input, st.session_state.model)
-                st.write(", ".join(recommendations))
+                recommendations = generate_recommendations(profile_input)
+                st.write("Here are some course recommendations based on your profile:")
+                for course in recommendations:
+                    st.image(course['image'], width=150)
+                    st.write(f"**{course['name']}**")
 
 if __name__ == "__main__":
     main()
