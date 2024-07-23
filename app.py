@@ -12,6 +12,7 @@ from langchain.chains import ConversationalRetrievalChain
 from htmlTemplates import css, bot_template, user_template
 from functools import wraps
 import time
+import difflib
 
 # Decorator for measuring execution time
 def timeit(func):
@@ -84,33 +85,75 @@ def handle_userinput(user_question):
                 bot_template.replace("{{MSG}}", message.content), unsafe_allow_html=True
             )
 
-# Simple Student Assistance Chatbot Function
-def assist_student(query):
+# Improved Student Assistance Chatbot Function with Memory
+def assist_student(query, memory):
     responses = {
         "hello": "Hello! How can I assist you today?",
         "hi": "Hi there! How can I help you?",
         "greetings": "Greetings! What can I do for you?",
         "help": "Sure, I'm here to help! What do you need assistance with?",
         "course": "I can help you with course recommendations or any queries about your studies. What do you need?",
+        "fees": "For fee details, please visit the college website or contact the admissions office.",
+        "schedule": "The class schedules are available on the student portal. You can also check with your department office.",
+        "admission": "For admission inquiries, please visit our admissions page or contact the admissions office directly.",
+        "exam": "Exam schedules and details can be found on the exam portal. Make sure to check it regularly.",
     }
     default_response = "I'm here to assist you with any questions you have. How can I help?"
     for keyword, response in responses.items():
-        if keyword in query.lower():
+        if difflib.SequenceMatcher(None, keyword, query.lower()).ratio() > 0.6:
+            memory.save_context({"user": query}, {"assistant": response})
             return response
+    memory.save_context({"user": query}, {"assistant": default_response})
     return default_response
 
 # Function to generate course recommendations with images
 def generate_recommendations(profile):
     courses = [
-        {"name": "Introduction to Machine Learning", "image": "https://via.placeholder.com/150/FF6347/FFFFFF?text=Machine+Learning"},
-        {"name": "Data Science Fundamentals", "image": "https://via.placeholder.com/150/4682B4/FFFFFF?text=Data+Science"},
-        {"name": "Web Development Bootcamp", "image": "https://via.placeholder.com/150/32CD32/FFFFFF?text=Web+Development"},
-        {"name": "Advanced Python Programming", "image": "https://via.placeholder.com/150/FFD700/FFFFFF?text=Python+Programming"},
-        {"name": "Digital Marketing Essentials", "image": "https://via.placeholder.com/150/FF4500/FFFFFF?text=Marketing+Essentials"}
+        {
+            "name": "Introduction to Machine Learning",
+            "image": "https://images.unsplash.com/photo-1504639725590-34d0984388bd",
+            "description": "Learn the basics of machine learning with hands-on projects and real-world applications.",
+            "rating": 4.7,
+            "duration": "6 weeks",
+            "instructor": "Andrew Ng"
+        },
+        {
+            "name": "Data Science Fundamentals",
+            "image": "https://images.unsplash.com/photo-1518353223646-282c9739b56a",
+            "description": "Explore the core concepts of data science, including data manipulation, analysis, and visualization.",
+            "rating": 4.5,
+            "duration": "8 weeks",
+            "instructor": "Emily Fox"
+        },
+        {
+            "name": "Web Development Bootcamp",
+            "image": "https://images.unsplash.com/photo-1527689368864-3a821dbccc34",
+            "description": "Become a full-stack web developer with this comprehensive bootcamp covering HTML, CSS, JavaScript, and more.",
+            "rating": 4.8,
+            "duration": "12 weeks",
+            "instructor": "Colt Steele"
+        },
+        {
+            "name": "Advanced Python Programming",
+            "image": "https://images.unsplash.com/photo-1581093588401-7162a1757a8a",
+            "description": "Deepen your understanding of Python with advanced topics and real-world coding challenges.",
+            "rating": 4.6,
+            "duration": "10 weeks",
+            "instructor": "Jose Portilla"
+        },
+        {
+            "name": "Digital Marketing Essentials",
+            "image": "https://images.unsplash.com/photo-1504384308090-c894fdcc538d",
+            "description": "Master the fundamentals of digital marketing, including SEO, social media, and email marketing.",
+            "rating": 4.4,
+            "duration": "4 weeks",
+            "instructor": "Neil Patel"
+        }
     ]
     return courses
 
-# Main function
+
+#main-function
 def main():
     load_dotenv()
     st.set_page_config(page_title="Multi-functional App", page_icon=":books:", layout="wide")
@@ -121,6 +164,8 @@ def main():
         st.session_state.conversation = None
     if "chat_history" not in st.session_state:
         st.session_state.chat_history = None
+    if "assist_memory" not in st.session_state:
+        st.session_state.assist_memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
 
     # Sidebar for navigation
     st.sidebar.title("Navigation")
@@ -150,8 +195,23 @@ def main():
         assist_query = st.text_area("Ask for assistance regarding your studies, college plans, etc.")
         if st.button("Submit Assistance Query"):
             with st.spinner("Generating response..."):
-                assist_response = assist_student(assist_query)
-                st.write(assist_response)
+                assist_response = assist_student(assist_query, st.session_state.assist_memory)
+                st.write(
+                    bot_template.replace("{{MSG}}", assist_response), unsafe_allow_html=True
+                )
+
+            st.write("<h2>Chat History</h2>", unsafe_allow_html=True)
+            for message in st.session_state.assist_memory.chat_memory.messages:
+                if message.type == "human":
+                    st.write(
+                        user_template.replace("{{MSG}}", message.content),
+                        unsafe_allow_html=True,
+                    )
+                else:
+                    st.write(
+                        bot_template.replace("{{MSG}}", message.content),
+                        unsafe_allow_html=True,
+                    )
 
     elif app_mode == "Course Recommendations":
         st.header("Course Recommendations")
@@ -160,9 +220,20 @@ def main():
             with st.spinner("Generating recommendations..."):
                 recommendations = generate_recommendations(profile_input)
                 st.write("Here are some course recommendations based on your profile:")
+
                 for course in recommendations:
-                    st.image(course['image'], width=150)
-                    st.write(f"**{course['name']}**")
+                    st.markdown(f"""
+                    <div class="course-container">
+                        <img src="{course['image']}" width="100%" height="200px">
+                        <h2>{course['name']}</h2>
+                        <p><strong>Instructor:</strong> {course['instructor']}</p>
+                        <p><strong>Duration:</strong> {course['duration']}</p>
+                        <p class="rating">Rating: {course['rating']} ⭐</p>
+                        <p>{course['description']}</p>
+                        <button class="enroll-button">Enroll Now</button>
+                    </div>
+                    """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
+

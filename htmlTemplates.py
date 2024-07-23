@@ -65,8 +65,45 @@ css = """
     font-family: 'Arial Black', sans-serif;
     text-transform: uppercase;
 }
+.course-container {
+    background-color: #f9f9f9;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    text-align: center;
+}
+.course-container img {
+    border-radius: 10px;
+    margin-bottom: 10px;
+}
+.course-container h2 {
+    color: #333;
+    margin-bottom: 10px;
+}
+.course-container p {
+    color: #666;
+}
+.course-container .rating {
+    color: #FFD700;
+    font-weight: bold;
+}
+.course-container .enroll-button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s;
+}
+.course-container .enroll-button:hover {
+    background-color: #45a049;
+}
 </style>
 """
+
 
 bot_template = """
 <div class="chat-message bot">
