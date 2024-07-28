@@ -1,124 +1,79 @@
+# htmlTemplates.py
+
 css = """
 <style>
-.chat-message {
-    padding: 1.5rem; 
-    border-radius: 0.5rem; 
-    margin-bottom: 1rem; 
-    display: flex; 
-    align-items: center;
-}
-.chat-message.user {
-    background-color: #2b313e;
-    color: #fff;
-}
-.chat-message.bot {
-    background-color: #475063;
-    color: #fff;
-}
-.chat-message .avatar {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    overflow: hidden;
-    margin-right: 1rem;
-}
-.chat-message .avatar img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-.chat-message .message {
-    width: calc(100% - 70px); /* Adjusting width to fit the layout */
+body {
+    font-family: 'Arial', sans-serif;
 }
 .stButton>button {
-    background-color: #4CAF50; 
-    color: white; 
-    padding: 12px 24px; 
-    border: none; 
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 16px;
-    transition: background-color 0.3s;
-}
-.stButton>button:hover {
-    background-color: #45a049;
-}
-.stTextInput>div>div input {
-    padding: 10px;
-    border: 2px solid #ccc;
-    border-radius: 4px;
-    font-size: 16px;
-}
-.stTextArea>div>textarea {
-    padding: 10px;
-    border: 2px solid #ccc;
-    border-radius: 4px;
-    font-size: 16px;
-}
-.stHeader {
-    color: #4CAF50;
-    font-family: 'Arial Black', sans-serif;
-    text-transform: uppercase;
-}
-.stSubheader {
-    color: #45a049;
-    font-family: 'Arial Black', sans-serif;
-    text-transform: uppercase;
-}
-.course-container {
-    background-color: #f9f9f9;
-    padding: 20px;
-    border-radius: 10px;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    text-align: center;
-}
-.course-container img {
-    border-radius: 10px;
-    margin-bottom: 10px;
-}
-.course-container h2 {
-    color: #333;
-    margin-bottom: 10px;
-}
-.course-container p {
-    color: #666;
-}
-.course-container .rating {
-    color: #FFD700;
-    font-weight: bold;
-}
-.course-container .enroll-button {
     background-color: #4CAF50;
     color: white;
-    padding: 10px 20px;
     border: none;
-    border-radius: 5px;
-    cursor: pointer;
+    padding: 10px 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
     font-size: 16px;
-    transition: background-color 0.3s;
+    margin: 4px 2px;
+    transition-duration: 0.4s;
+    cursor: pointer;
+    border-radius: 12px;
 }
-.course-container .enroll-button:hover {
-    background-color: #45a049;
+.stButton>button:hover {
+    background-color: white;
+    color: black;
+    border: 2px solid #4CAF50;
+}
+.chat-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 70vh;
+    overflow-y: auto;
+    padding: 10px;
+    border-radius: 10px;
+    background-color: #f0f2f6;
+}
+.chat-message {
+    display: flex;
+    align-items: flex-start;
+    margin: 10px 0;
+}
+.chat-message.user {
+    justify-content: flex-end;
+}
+.chat-message.bot {
+    justify-content: flex-start;
+}
+.chat-bubble {
+    max-width: 60%;
+    padding: 10px;
+    border-radius: 10px;
+    font-size: 14px;
+}
+.chat-bubble.user {
+    background-color: #dcf8c6;
+    color: #333;
+}
+.chat-bubble.bot {
+    background-color: #ececec;
+    color: #333;
 }
 </style>
 """
 
-
 bot_template = """
 <div class="chat-message bot">
-    <div class="avatar">
-        <img src="https://i.ibb.co/cN0nmSj/Screenshot-2023-05-28-at-02-37-21.png" alt="Bot Avatar">
+    <div class="chat-bubble bot">
+        {{MSG}}
     </div>
-    <div class="message">{{MSG}}</div>
 </div>
 """
 
 user_template = """
 <div class="chat-message user">
-    <div class="avatar">
-        <img src="https://i.ibb.co/rdZC7LZ/Photo-logo-1.png" alt="User Avatar">
+    <div class="chat-bubble user">
+        {{MSG}}
     </div>
-    <div class="message">{{MSG}}</div>
 </div>
 """
